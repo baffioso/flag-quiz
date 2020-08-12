@@ -9,3 +9,8 @@ export interface Loading {
     questionNum: number;
     featureCount: number;
 }
+
+export interface Country {
+    admin: string;
+    iso: string;
+} 

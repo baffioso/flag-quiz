@@ -1,34 +1,29 @@
 <div class="landing">
-    <div class="stamp is-draft">
-        HISTORY EDITION
-    </div>
     <div class="intro">
-        <h2><span>History Location Quiz</span></h2>
+        <div class="stamp is-draft">
+            FLAG QUIZ
+        </div>
         <br>
         <p>
-            How well do you know locations of heritages and war battles?
+            How well do you know flags and country locations?
         </p>
     </div>
     <div class="categories">
-        <div *ngFor="let cat of categories">
-            <button mat-raised-button (click)="selected(cat.id)">
-                <!-- <mat-icon>{{cat.icon}}</mat-icon> -->
-                {{cat.name}}
+        <div>
+            <button mat-raised-button (click)="start()">
+                START
             </button>
         </div>
 
     </div>
     <div class="help">
         <p>
-            <span><strong>How to play:</strong></span><br>Place a marker on the map and press GUESS
+            <span><strong>How to play:</strong></span><br>Select a country on the map and press GUESS
         </p>
     </div>
     <div class="attribution">
         <p>
-            Sources:
-            <a href="https://www.wikidata.org" target="_blank">Wikidata</a>
-            og <a href="https://github.com/baffioso/geoquiz-history" target="_blank"
-                rel="noopener noreferrer">Github</a>
+            <a href="https://github.com/baffioso/flag-quiz" target="_blank" rel="noopener noreferrer">Github</a>
         </p>
     </div>
 </div>

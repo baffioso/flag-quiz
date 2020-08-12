@@ -2,12 +2,9 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Feature } from 'geojson';
 
 import { MapService } from './map/map.service';
-import { battle } from '../assets/battle';
-import { heritage } from 'src/assets/heritage';
-import { Loading, Category } from './interfaces';
-import { WikipediaService } from './wikipedia.service';
-import { tap } from 'rxjs/operators';
-import { Subscription, Observable } from 'rxjs';
+import { countryCodes } from '../assets/countryCodes';
+import { Loading, Country } from './interfaces';
+import { Subscription } from 'rxjs';
 
 @Component({
     selector: 'app-root',
@@ -15,49 +12,58 @@ import { Subscription, Observable } from 'rxjs';
     styleUrls: ['./app.component.scss']
 })
 export class AppComponent implements OnInit, OnDestroy {
-    title = 'geoquiz';
+    title = 'Flag-Quiz';
     showLanding = true;
     showLoading = false;
     showQuestion = false;
+    showResult = false;
     showSummery = false;
-    randomLocations: Feature[];
+    randomCountries: Country[];
+    currentCountry: string;
     index = 0;
-    buttonGuess = true;
-    distance: number[] = [];
-    totalDistance: number;
     features: any;
     questionNum = 10;
-    categories = [
-        { name: 'War Battle', id: 'battle', icon: 'museum' },
-        { name: 'Heritage', id: 'heritage', icon: 'museum' },
-    ];
-    selectedCategory: string;
     loadingData: Loading;
-    sub: Subscription;
-    addedMarker = false;
+    selectedCountrySub: Subscription;
+    selectedCounty: Country = null;
+    currentResult: boolean = null;
+    score = 0;
 
     constructor(
         private mapService: MapService,
-        private wikiService: WikipediaService
     ) { }
 
     ngOnInit(): void {
-        this.mapService.addedMarker.subscribe(e => this.addedMarker = e);
+
+        this.selectedCountrySub = this.mapService.selectedCountry.subscribe(res => {
+            if (res) {
+                this.selectedCounty = res;
+            }
+            // this.nextQuestion();
+            // if (res.iso === this.currentCountry) {
+            //     alert('CORRECT');
+            // } else {
+            //     alert('FALSE');
+            // }
+        });
+
+        this.randomCountries = this.getRandomCountries(countryCodes, this.questionNum);
+        this.currentCountry = this.randomCountries[this.index].iso;
     }
 
     ngOnDestroy(): void {
-        this.sub.unsubscribe();
+        this.selectedCountrySub.unsubscribe();
     }
 
     onClick() {
         if (this.index < this.questionNum) {
-            this.buttonGuess ? this.answer() : this.nextQuestion();
+            this.answer();
         } else {
             this.handleSummery();
         }
     }
 
-    selectCategory(id: string) {
+    startQuiz() {
         this.showLanding = false;
         this.showLoading = true;
 
@@ -65,140 +71,87 @@ export class AppComponent implements OnInit, OnDestroy {
         setTimeout(() => {
             this.showLoading = false;
             this.showQuestion = true;
-        }, 2000);
+        }, 100);
 
-        switch (id) {
-            case 'battle':
-                this.features = battle.features;
-                this.selectedCategory = id;
-                break;
-            case 'heritage':
-                this.features = heritage.features;
-                this.selectedCategory = id;
-                break;
-            default:
-                break;
-        }
-
-        this.loadingData = {
-            category: this.getCategoryFromId(id).name,
-            questionNum: this.questionNum,
-            featureCount: this.features.length
-        };
-
-        // raing 1 is easy 0 is hard
-        const easy = this.mapService.getRandomLocations(
-            this.features.filter(x => x['properties']['rating'] === 1),
-            Math.round(this.questionNum / 2)
-        );
-        const hard = this.mapService.getRandomLocations(
-            this.features.filter(x => x['properties']['rating'] === 0),
-            Math.round(this.questionNum / 2)
-        );
-
-        // combine and shuffle
-        this.randomLocations = easy.concat(hard).sort(() => Math.random() - 0.5);
+        // // combine and shuffle
+        // this.randomCountries = null;
     }
 
     answer() {
 
-        // Get guess and answer coords
-        const feature = this.randomLocations[this.index];
-        const guessCoords = [this.mapService.currentLocation['lng'], this.mapService.currentLocation['lat']] as [number, number];
-        const answerCoords = feature.geometry['coordinates'] as [number, number];
+        console.log(this.selectedCounty.iso, this.currentCountry);
 
-        // draw line on map and calculate distance
-        const line = this.mapService.createLine(guessCoords, answerCoords);
-        const dist = this.mapService.getDistance(guessCoords, answerCoords);
-        this.distance.push(dist);
-        this.mapService.addLineToMap(line, dist);
-        this.mapService.zoomTo(line);
-
-        // Add popup
-        const name = feature.properties.name;
-        const wd = feature.properties.wikidata;
-        const wp = feature.properties.wikipedia;
-
-        const wpPage = wp.split('/')[wp.split('/').length - 1];
-
-        // Get excerpt and build/add popup
-        this.wikiService.getExcerpt(wpPage)
-            .pipe(
-                tap(res => {
-                    let html: string;
-                    if (wp && wp.length > 0) {
-                        // tslint:disable-next-line:max-line-length
-                        html = `<h3>${name}</h3>${res}<a href=${wp} target="_blank">MORE</a>`;
-                    } else if (wd) {
-                        html = `<h3>${name}</h3>${res}<a href=${wd} target="_blank">Wikidata</a>`;
-                    } else {
-                        html = `<h3>${name}</h3>${res}`;
-                    }
-
-                    this.mapService.addPopup(answerCoords, html);
-                })
-            )
-            .subscribe();
-
-        this.buttonGuess = false;
-        this.showQuestion = false;
-
-        if (this.index === this.questionNum - 1) {
-            this.showQuestion = false;
-            this.index = ++this.index;
+        this.showResult = true;
+        if (this.selectedCounty.iso === this.currentCountry) {
+            this.currentResult = true;
+            this.score = ++this.score;
+        } else {
+            this.currentResult = false;
         }
+        console.log(this.score);
+
+
+        setTimeout(() => {
+            this.showResult = false;
+
+            if (this.index === this.questionNum - 1) {
+                this.showQuestion = true;
+                this.index = ++this.index;
+                this.currentCountry = this.randomCountries[this.index].iso;
+            }
+
+            this.mapService.removeHighlight();
+            this.nextQuestion();
+        }, 500);
+
+
+
+
     }
 
     nextQuestion() {
-
-        // Remove markers and line
-        this.mapService.marker.remove();
-        this.mapService.addedMarker.next(false);
-        this.mapService.popup.remove();
-        this.mapService.removeLine();
-
         // Zoom to dk
         this.mapService.flyToDK();
 
-        this.buttonGuess = true;
         this.showQuestion = true;
 
         this.index = ++this.index;
+        this.currentCountry = this.randomCountries[this.index].iso;
+
     }
 
     handleSummery() {
         this.showSummery = true;
         this.showQuestion = false;
 
-        // Remove popup, marker and line
-        this.mapService.marker.remove();
-        this.mapService.popup.remove();
-        this.mapService.removeLine();
-
-        // Calculate total distance
-        this.totalDistance = Math.round(this.distance.reduce((acc, cur) => acc + cur));
     }
 
     playAgain() {
         this.index = 0;
-        this.distance = [];
-
-        // Remove popup, marker and line
-        this.mapService.marker.remove();
-        this.mapService.popup.remove();
-        this.mapService.removeLine();
 
         this.mapService.currentLocation = null;
         this.mapService.flyToDK();
+        this.mapService.removeHighlight();
 
-        this.buttonGuess = true;
         this.showLanding = true;
         this.showSummery = false;
         this.showQuestion = false;
     }
 
-    getCategoryFromId(id: string): Category {
-        return this.categories.find(x => x.id === id);
+    getRandomCountries(countries: Country[], n: number) {
+        const result = new Array(n);
+        let len = countries.length;
+        const taken = new Array(len);
+
+        if (n > len) {
+            throw new RangeError('getRandomLocations: more elements taken than available');
+        }
+        while (n--) {
+            const x = Math.floor(Math.random() * len);
+            result[n] = countries[x in taken ? taken[x] : x];
+            taken[x] = --len in taken ? taken[len] : len;
+        }
+        return result;
     }
 
 }

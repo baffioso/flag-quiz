@@ -10,6 +10,7 @@ import { SummeryComponent } from './summery/summery.component';
 import { LandingComponent } from './landing/landing.component';
 import { LoadingComponent } from './loading/loading.component';
 import { HttpClientModule, HttpClientJsonpModule } from '@angular/common/http';
+import { ResultComponent } from './result/result.component';
 
 @NgModule({
     declarations: [
@@ -17,7 +18,8 @@ import { HttpClientModule, HttpClientJsonpModule } from '@angular/common/http';
         MapComponent,
         SummeryComponent,
         LandingComponent,
-        LoadingComponent
+        LoadingComponent,
+        ResultComponent
     ],
     imports: [
         BrowserModule,

@@ -1,26 +1,24 @@
-<app-landing *ngIf="showLanding" [categories]="categories" [questionsNum]="questionNum"
-    (selectCategory)="selectCategory($event)"></app-landing>
+<app-landing *ngIf="showLanding" (startQuiz)="startQuiz()"></app-landing>
 <app-loading *ngIf="showLoading" [data]="loadingData"></app-loading>
 <button mat-icon-button class="back" *ngIf="!showLanding" (click)="playAgain()">
     <mat-icon>chevron_left</mat-icon>
 </button>
 <div *ngIf="showQuestion" class="question">
     <p class="count">{{index+1}}/{{questionNum}}</p>
-    <h1 *ngIf="index < questionNum">
-        Where {{selectedCategory === 'battle' ? 'was' : 'is'}} <span
-            class="location">{{randomLocations[index].properties.name}}</span>?
-    </h1>
-    <p class="war"><span>{{randomLocations[index].properties.war}}</span></p>
+    <div *ngIf="index < questionNum">
+        <img src="assets/flags/{{currentCountry}}.png" alt="country" />
+    </div>
 </div>
+<app-result *ngIf="showResult" [result]="currentResult"></app-result>
 <div *ngIf="!showLanding && !showLoading && !showSummery" class="btn">
-    <p *ngIf="!addedMarker">Click on map to add marker</p>
-    <button *ngIf="index < questionNum && addedMarker" mat-raised-button (click)="onClick()">
-        <h2>{{buttonGuess ? 'guess' : 'next'}}</h2>
+    <p *ngIf="!selectedCounty">Click on map to select a country</p>
+    <button *ngIf="index < questionNum && selectedCounty" mat-raised-button (click)="onClick()">
+        <h2>guess</h2>
     </button>
     <button *ngIf="index >= questionNum" mat-raised-button (click)="handleSummery()">
         <h2>Result</h2>
     </button>
 </div>
-<app-summery *ngIf="showSummery" [distance]="totalDistance" [links]="randomLocations" (replay)="playAgain()">
+<app-summery *ngIf="showSummery" (replay)="playAgain()" [score]="score">
 </app-summery>
 <app-map></app-map>

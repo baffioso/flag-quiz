@@ -6,7 +6,7 @@ import { Component, OnInit, Input } from '@angular/core';
   styleUrls: ['./loading.component.scss']
 })
 export class LoadingComponent implements OnInit {
-  @Input() data: { category: string, questionNum: number, featureCount: number }
+  @Input() data: { category: string, questionNum: number, featureCount: number };
 
   constructor() { }
 

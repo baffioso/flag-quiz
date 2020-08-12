@@ -6,8 +6,7 @@ import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
   styleUrls: ['./summery.component.scss']
 })
 export class SummeryComponent implements OnInit {
-  @Input() distance: number;
-  @Input() links: any[];
+  @Input() score: string;
   @Output() replay = new EventEmitter();
 
   constructor() { }
